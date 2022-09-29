@@ -1,11 +1,5 @@
-let _instance;
-const service = (options) => {
-  _instance = _instance || new service.Class(options);
-
-  return _instance;
-};
-
-service.isNullOrEmpty = (obj) => {
+function Service() {}
+Service.prototype.isNullOrEmpty = (obj) => {
   if ("undefined" === typeof obj || obj == null) {
     return true;
   } else if (
@@ -24,4 +18,5 @@ service.isNullOrEmpty = (obj) => {
     return false;
   }
 };
+const service = new Service();
 module.exports = service;
