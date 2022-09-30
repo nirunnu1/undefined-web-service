@@ -95,6 +95,9 @@ class Service {
         return { status: false };
       });
   }
+  UrlDetect(url) {
+    return window.location.href.indexOf(url) > -1;
+  }
 }
 
 const service = new Service();

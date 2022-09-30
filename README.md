@@ -26,6 +26,8 @@ REACT_APP_KEY_TIMEOUT=INT
   service.postHttp(string)
   //retrun lodash
   service.lodash
+  //retrun boolean
+  service.UrlDetect(url)
   
 ```
 # Support
