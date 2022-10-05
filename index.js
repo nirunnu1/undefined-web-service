@@ -96,7 +96,11 @@ class Service {
       });
   }
   UrlDetect(url) {
-    return window.location.href.indexOf(url) > -1;
+    if (window.location.href.indexOf(url) > -1) {
+      return false;
+    } else {
+      return true;
+    }
   }
 }
 
