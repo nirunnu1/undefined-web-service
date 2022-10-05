@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nirunnu1/undefined-web-service.git"
+    "url": "git+https://github.com/nirunnu1/undefined-service-web.git"
   },
   "author": "Nirun Tulayote",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nirunnu1/undefined-web-service/issues"
+    "url": "https://github.com/nirunnu1/undefined-service-web/issues"
   },
-  "homepage": "https://github.com/nirunnu1/undefined-web-service#readme",
+  "homepage": "https://github.com/nirunnu1/undefined-service-web#readme",
   "dependencies": {
     "axios": "0.27.2",
     "lodash": "^4.17.20"
