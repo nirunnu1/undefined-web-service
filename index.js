@@ -96,10 +96,11 @@ class Service {
       });
   }
   UrlDetect(url) {
-    if (window.location.href.indexOf(url) > -1) {
-      return false;
-    } else {
+    try {
+      new URL(url);
       return true;
+    } catch (e) {
+      return false;
     }
   }
 }
