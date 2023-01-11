@@ -1,6 +1,6 @@
 {
   "name": "undefined-service-web",
-  "version": "1.0.16",
+  "version": "1.0.22",
   "description": "",
   "files": [
     "index.js"
@@ -10,7 +10,8 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "publish": "npm publish",
+    "upd": "npm update --save --force"
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,7 @@
   },
   "homepage": "https://github.com/nirunnu1/undefined-service-web#readme",
   "dependencies": {
-    "axios": "0.27.2",
-    "lodash": "^4.17.20"
+    "axios": "^0.27.2",
+    "lodash": "^4.17.21"
   }
 }
