@@ -1,5 +1,7 @@
 import axios from "axios";
 import _ from "lodash";
+import { useDispatch } from "react-redux";
+import { setAuthUser } from "./redux/actions";
 const isNumeric = (input) => {
   var RE =
     /^-?(0|INF|(0[1-7][0-7]*)|(0x[0-9a-fA-F]+)|((0|[1-9][0-9]*|(?=[\\.,]))([\\.,][0-9]+)?([eE]-?\d+)?))$/;
@@ -38,6 +40,35 @@ const isThaiNationalID = (id) => {
   if ((11 - (sum % 11)) % 10 !== parseFloat(id.charAt(12))) return false;
   return true;
 };
+const getHttp = async (path, dispatch) => {
+  let _axios = axios.create({
+    baseURL: process.env.REACT_APP_KEY_URLAPI,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+      "X-PNAME": process.env.REACT_APP_KEY_NAME,
+    },
+    timeout: process.env.REACT_APP_KEY_TIMEOUT,
+  });
+  return _axios
+    .get(path)
+    .then((res) => {
+      if (res.status === 200) {
+        if (res.data.status === false && res.data.isExpired === true) {
+          localStorage.removeItem("token");
+          if (dispatch != undefined) {
+            dispatch(setAuthUser(null));
+          }
+        }
+        return res.data;
+      } else {
+        return { status: false };
+      }
+    })
+    .catch(() => {
+      return { status: false };
+    });
+};
 class Service {
   constructor(options) {
     this._options = options;
@@ -67,35 +98,7 @@ class Service {
       return { status: false, error: error };
     };
   }
-  getHttp(path, dispatch) {
-    let _axios = axios.create({
-      baseURL: process.env.REACT_APP_KEY_URLAPI,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "X-PNAME": process.env.REACT_APP_KEY_NAME,
-      },
-      timeout: process.env.REACT_APP_KEY_TIMEOUT,
-    });
-    return _axios
-      .get(path)
-      .then((res) => {
-        if (res.status === 200) {
-          if (res.data.status === false && res.data.isExpired === true) {
-            localStorage.removeItem("token");
-            if (dispatch !== undefined) {
-              dispatch(setAuthUser(null));
-            }
-          }
-          return { status: true, data: res.data };
-        } else {
-          return { status: false };
-        }
-      })
-      .catch(() => {
-        return { status: false };
-      });
-  }
+  getHttp = getHttp;
   postHttp(path, data) {
     let _axios = axios.create({
       baseURL: process.env.REACT_APP_KEY_URLAPI, //YOUR_API_URL HERE
@@ -201,7 +204,7 @@ class Service {
         }
       }
       if (!isNullOrEmpty(_schema["isThaiNationalID"]) && _isValidate) {
-        if (!isThaiNationalID(from[name])) {
+        if (!isThaiNationalID(from[name].replace(/[^\d]/g, ""))) {
           _isValidate = false;
           isValidate = false;
           error[name] = _schema["isThaiNationalID"];
