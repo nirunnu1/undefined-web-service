@@ -2,6 +2,8 @@ import axios from "axios";
 import _ from "lodash";
 import { useDispatch } from "react-redux";
 import { setAuthUser } from "./redux/actions";
+import { PdfReader, Rule } from "pdfreader";
+
 const isNumeric = (input) => {
   var RE =
     /^-?(0|INF|(0[1-7][0-7]*)|(0x[0-9a-fA-F]+)|((0|[1-9][0-9]*|(?=[\\.,]))([\\.,][0-9]+)?([eE]-?\d+)?))$/;
@@ -39,6 +41,105 @@ const isThaiNationalID = (id) => {
   for (let i = 0; i < 12; i++) sum += parseFloat(id.charAt(i)) * (13 - i);
   if ((11 - (sum % 11)) % 10 !== parseFloat(id.charAt(12))) return false;
   return true;
+};
+
+const Kerry = {
+  PAYMENT: {
+    PdfToText: (path) => {
+      let arr = {};
+      let row = 0;
+      return new Promise(function (resolve, reject) {
+        new PdfReader().parseFileItems(path, (err, item) => {
+          if (err) {
+            reject({ status: false });
+          } else if (!item) {
+            const result = Object.keys(arr).map((key) => [key, arr[key]]);
+            const item = [];
+            result.map((e) => {
+              const data = Object.keys(e[1]).map((key) => [key, e[1][key]]);
+              if (data.length > 10) {
+                item.push({
+                  r: e[0],
+                  data: data,
+                });
+              }
+            });
+            let header = [];
+            let dt = [];
+            item.map((e) => {
+              let isItem = true;
+              if (header.length < 1) {
+                Object.keys(e.data).map((key) => {
+                  if (
+                    e.data[key][1].toString().toLowerCase().includes("con no")
+                  ) {
+                    e.data.map((d) => {
+                      if (d[0] != "y") {
+                        if (header.length > 0) {
+                          if (
+                            parseInt(d[0]) - header[header.length - 1].x <
+                            2
+                          ) {
+                            header[header.length - 1].text =
+                              header[header.length - 1].text +
+                              " " +
+                              d[1].trim();
+                          } else {
+                            header.push({
+                              x: parseInt(d[0]),
+                              text: d[1].trim(),
+                            });
+                          }
+                          // header[header.length - 1];
+                        } else {
+                          header.push({ x: parseInt(d[0]), text: d[1].trim() });
+                        }
+                      }
+                    });
+                  }
+                });
+              }
+              Object.keys(e.data).map((key) => {
+                if (
+                  e.data[key][1].toString().toLowerCase().includes("con no")
+                ) {
+                  isItem = false;
+                }
+              });
+              if (isItem) {
+                let dd = [];
+                e.data.map((d) => {
+                  if (d[0] != "y") {
+                    dd.push(d[1].trim());
+                  }
+                });
+                dt.push(dd);
+              }
+            });
+            let Data = [];
+            dt.map((e) => {
+              Data.push({
+                ...e.map((fd, i) => {
+                  return { [header[i].text]: fd };
+                }),
+              });
+            });
+
+            resolve({ status: true, Data: Data });
+          } else if (item.text) {
+            if (arr[row]?.y !== parseInt(item.y) && arr[row]?.y != undefined) {
+              row = row + 1;
+            }
+            arr[row] = {
+              ...arr[row],
+              y: parseInt(item.y),
+              [item.x]: item.text,
+            };
+          }
+        });
+      });
+    },
+  },
 };
 const getHttp = async (path, dispatch) => {
   let _axios = axios.create({
