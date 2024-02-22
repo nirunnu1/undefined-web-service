@@ -1,146 +1,11 @@
 import axios from "axios";
 import _ from "lodash";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 import { setAuthUser } from "./redux/actions";
-import { PdfReader, Rule } from "pdfreader";
+import CheckInformation from "./check_information";
+import { getDocument, GlobalWorkerOptions, version } from "pdfjs-dist";
+GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.js`;
 
-const isNumeric = (input) => {
-  var RE =
-    /^-?(0|INF|(0[1-7][0-7]*)|(0x[0-9a-fA-F]+)|((0|[1-9][0-9]*|(?=[\\.,]))([\\.,][0-9]+)?([eE]-?\d+)?))$/;
-  return RE.test(input);
-};
-const isNullOrEmpty = (obj) => {
-  if ("undefined" === typeof obj || obj == null) {
-    return true;
-  } else if (
-    typeof obj != "undefined" &&
-    obj != null &&
-    obj.length !== null &&
-    obj.length === 0
-  ) {
-    return true; //array
-  } else if ("number" === typeof obj) {
-    return obj !== obj; //NaN
-
-    // return false;
-  } else if ("string" === typeof obj) {
-    return obj.length < 1 ? true : false;
-  } else {
-    return false;
-  }
-};
-const isEmail = (email) => {
-  var re = /\S+@\S+\.\S+/;
-  return re.test(email);
-};
-const isThaiNationalID = (id) => {
-  if (!isNumeric(id)) return false;
-  if (id.substring(0, 1) === 0) return false;
-  if (id.length !== 13) return false;
-  let sum = 0;
-  for (let i = 0; i < 12; i++) sum += parseFloat(id.charAt(i)) * (13 - i);
-  if ((11 - (sum % 11)) % 10 !== parseFloat(id.charAt(12))) return false;
-  return true;
-};
-
-const Kerry = {
-  PAYMENT: {
-    PdfToText: (path) => {
-      let arr = {};
-      let row = 0;
-      return new Promise(function (resolve, reject) {
-        new PdfReader().parseFileItems(path, (err, item) => {
-          if (err) {
-            reject({ status: false });
-          } else if (!item) {
-            const result = Object.keys(arr).map((key) => [key, arr[key]]);
-            const item = [];
-            result.map((e) => {
-              const data = Object.keys(e[1]).map((key) => [key, e[1][key]]);
-              if (data.length > 10) {
-                item.push({
-                  r: e[0],
-                  data: data,
-                });
-              }
-            });
-            let header = [];
-            let dt = [];
-            item.map((e) => {
-              let isItem = true;
-              if (header.length < 1) {
-                Object.keys(e.data).map((key) => {
-                  if (
-                    e.data[key][1].toString().toLowerCase().includes("con no")
-                  ) {
-                    e.data.map((d) => {
-                      if (d[0] != "y") {
-                        if (header.length > 0) {
-                          if (
-                            parseInt(d[0]) - header[header.length - 1].x <
-                            2
-                          ) {
-                            header[header.length - 1].text =
-                              header[header.length - 1].text +
-                              " " +
-                              d[1].trim();
-                          } else {
-                            header.push({
-                              x: parseInt(d[0]),
-                              text: d[1].trim(),
-                            });
-                          }
-                          // header[header.length - 1];
-                        } else {
-                          header.push({ x: parseInt(d[0]), text: d[1].trim() });
-                        }
-                      }
-                    });
-                  }
-                });
-              }
-              Object.keys(e.data).map((key) => {
-                if (
-                  e.data[key][1].toString().toLowerCase().includes("con no")
-                ) {
-                  isItem = false;
-                }
-              });
-              if (isItem) {
-                let dd = [];
-                e.data.map((d) => {
-                  if (d[0] != "y") {
-                    dd.push(d[1].trim());
-                  }
-                });
-                dt.push(dd);
-              }
-            });
-            let Data = [];
-            dt.map((e) => {
-              Data.push({
-                ...e.map((fd, i) => {
-                  return { [header[i].text]: fd };
-                }),
-              });
-            });
-
-            resolve({ status: true, Data: Data });
-          } else if (item.text) {
-            if (arr[row]?.y !== parseInt(item.y) && arr[row]?.y != undefined) {
-              row = row + 1;
-            }
-            arr[row] = {
-              ...arr[row],
-              y: parseInt(item.y),
-              [item.x]: item.text,
-            };
-          }
-        });
-      });
-    },
-  },
-};
 const getHttp = async (path, dispatch) => {
   let _axios = axios.create({
     baseURL: process.env.REACT_APP_KEY_URLAPI,
@@ -166,10 +31,95 @@ const getHttp = async (path, dispatch) => {
         return { status: false };
       }
     })
-    .catch(() => {
-      return { status: false };
+    .catch((error) => {
+      return { status: false, error };
     });
 };
+const postHttp = async (path, data) => {
+  let _axios = axios.create({
+    baseURL: process.env.REACT_APP_KEY_URLAPI, //YOUR_API_URL HERE
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+      "X-PNAME": process.env.REACT_APP_KEY_NAME,
+    },
+    timeout: process.env.REACT_APP_KEY_TIMEOUT,
+  });
+  return _axios
+    .post(path, data)
+    .then((res) => {
+      if (res.status === 200) {
+        return { status: true, data: res.data };
+      } else {
+        return { status: false };
+      }
+    })
+    .catch((error) => {
+      return { status: false, error };
+    });
+};
+
+const KerryPayment = async (file, callback) => {
+  var pdf = await getDocument(await file.arrayBuffer()).promise;
+  const numPages = pdf.numPages;
+  var countPromises = []; // collecting all page promises
+  for (var j = 1; j <= numPages; j++) {
+    var page = pdf.getPage(j);
+
+    var txt = "";
+    countPromises.push(
+      page.then(function (page) {
+        // add page promise
+        var textContent = page.getTextContent();
+        return textContent;
+      })
+    );
+  }
+  Promise.all(countPromises).then(function (texts) {
+    const items = [];
+    texts.map((p) => {
+      let item = {};
+      p.items.map((e) => {
+        item[parseInt(e.transform[5])] = {
+          ...item[parseInt(e.transform[5])],
+          [parseInt(e.transform[4])]: e.str,
+        };
+      });
+      Object.keys(item).map((key) => {
+        if (Object.keys(item[key]).length > 10) {
+          // console.log(item[key]);
+          let ischeck = true;
+
+          Object.keys(item[key]).map((c) => {
+            if (
+              item[key][c].toLowerCase().includes("con no") ||
+              item[key][c].toLowerCase().includes("total")
+            ) {
+              ischeck = false;
+            }
+          });
+          if (ischeck) {
+            let _item = {};
+            let i = 0;
+            Object.keys(item[key]).map((c) => {
+              if (!isNullOrEmpty(item[key][c].trim())) {
+                _item = { ..._item, [i]: item[key][c] };
+                i = i + 1;
+              }
+            });
+            items.push(_item);
+          }
+        }
+      });
+    });
+    //  console.log(item)
+    callback(items);
+  });
+};
+const isNullOrEmpty = CheckInformation.isNullOrEmpty;
+const isEmail = CheckInformation.isEmail;
+const isNumeric = CheckInformation.isNumeric;
+const isThaiNationalID = CheckInformation.isThaiNationalID;
 class Service {
   constructor(options) {
     this._options = options;
@@ -179,14 +129,10 @@ class Service {
       userToken: localStorage.getItem("token"),
     };
   }
-  /**
-   * Returns true ถ้าไม่เท่ากับ undefined '' "" null
-   * @param obj  string int list
-   */
   isNullOrEmpty = isNullOrEmpty;
   isEmail = isEmail;
-  isThaiNationalID = isThaiNationalID;
   isNumeric = isNumeric;
+  isThaiNationalID = isThaiNationalID;
   lodash = _;
   getBase64(file, callback) {
     let reader = new FileReader();
@@ -200,29 +146,7 @@ class Service {
     };
   }
   getHttp = getHttp;
-  postHttp(path, data) {
-    let _axios = axios.create({
-      baseURL: process.env.REACT_APP_KEY_URLAPI, //YOUR_API_URL HERE
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "X-PNAME": process.env.REACT_APP_KEY_NAME,
-      },
-      timeout: process.env.REACT_APP_KEY_TIMEOUT,
-    });
-    return _axios
-      .post(path, data)
-      .then((res) => {
-        if (res.status === 200) {
-          return { status: true, data: res.data };
-        } else {
-          return { status: false };
-        }
-      })
-      .catch((error) => {
-        return { status: false };
-      });
-  }
+  postHttp = postHttp;
   UrlDetect(url) {
     try {
       new URL(url);
@@ -270,6 +194,7 @@ class Service {
       10
     )}-${Identity.slice(10, 12)}-${Identity.slice(12, 13)}`;
   }
+
   CalculateAge(DateofBirth) {
     const ageDifMs = Date.now() - DateofBirth;
     const ageDate = new Date(ageDifMs); // miliseconds from epoch
@@ -312,11 +237,24 @@ class Service {
         }
       }
     });
+    try {
+      const _error = Object.keys(error)[0];
+      Object.keys(error).map((e) => {
+        console.warn(`[undefined service] : An error occurred ${e} ${error[e]}`);
+      });
+      document.getElementById(_error).focus();
+      document.getElementById(_error).click();
+    } catch {
+      console.warn(`[undefined service] : An error occurred func[FocusError]`);
+    }
     return {
       isValidate,
       error,
     };
   }
+  Kerry = {
+    KerryPayment: KerryPayment,
+  };
 }
 
 const service = new Service();
