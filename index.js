@@ -4,7 +4,26 @@ import _ from "lodash";
 import { setAuthUser } from "./redux/actions";
 import CheckInformation from "./check_information";
 import { getDocument, GlobalWorkerOptions, version } from "pdfjs-dist";
+import * as moment from 'moment';
 GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.js`;
+
+function formatBuddhist(date, format) {
+  console.log("this", this)
+  const _m = moment(date)
+  var christianYear = _m.format('YYYY')
+  var buddhishYear = (parseInt(christianYear) + 543).toString()
+  if (service.isNullOrEmpty(format)) {
+    return new Date(_m)
+  } else {
+    return _m
+      .format(format.replace('YYYY', buddhishYear).replace('YY', buddhishYear.substring(2, 4))
+        .replace('yyyy', buddhishYear).replace('yy', buddhishYear.substring(2, 4)))
+      .replace(christianYear, buddhishYear)
+  }
+}
+moment.fn.formatBuddhist = formatBuddhist
+moment.prototype.formatBuddhist = formatBuddhist
+
 
 const getHttp = async (path, dispatch) => {
   let _axios = axios.create({
@@ -134,6 +153,7 @@ class Service {
   isNumeric = isNumeric;
   isThaiNationalID = isThaiNationalID;
   lodash = _;
+  moment = moment
   getBase64(file, callback) {
     let reader = new FileReader();
     reader.readAsDataURL(file);
