@@ -1,11 +1,11 @@
 {
   "name": "undefined-service-web",
-  "version": "1.0.43",
+  "version": "1.0.50",
   "description": "",
   "files": [
     "index.js",
-    "./redux/actions.js",
-    "./check_information/index.js"
+    "./check_information/index.js",
+    "./moment/index.js"
   ],
   "engines": {
     "node": ">=10"
@@ -32,7 +32,6 @@
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "pdfjs-dist": "^4.0.379",
-    "pdfreader": "^3.0.2",
-    "react-redux": "^8.1.3"
+    "pdfreader": "^3.0.2"
   }
 }
