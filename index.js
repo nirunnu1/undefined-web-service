@@ -34,13 +34,14 @@ const getHttp = async (path, dispatch) => {
       return { status: false, error };
     });
 };
-const postHttp = async (path, data) => {
-  let _axios = axios.create({
+const postHttp = async (path, data, headers = {}) => {
+  const _axios = axios.create({
     baseURL: process.env.REACT_APP_KEY_URLAPI, //YOUR_API_URL HERE
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${localStorage.getItem("token")}`,
       "X-PNAME": process.env.REACT_APP_KEY_NAME,
+      ...headers
     },
     timeout: process.env.REACT_APP_KEY_TIMEOUT,
   });
