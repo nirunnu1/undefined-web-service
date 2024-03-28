@@ -5,14 +5,15 @@ import { getDocument, GlobalWorkerOptions, version } from "pdfjs-dist";
 import moment from './moment';
 GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.js`;
 
-const getHttp = async (path, dispatch) => {
-  let _axios = axios.create({
+const getHttp = async (path, headers = {}, params = {}) => {
+  const _axios = axios.create({
     baseURL: process.env.REACT_APP_KEY_URLAPI,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${localStorage.getItem("token")}`,
       "X-PNAME": process.env.REACT_APP_KEY_NAME,
     },
+    params: { ...params },
     timeout: process.env.REACT_APP_KEY_TIMEOUT,
   });
   return _axios
@@ -34,7 +35,7 @@ const getHttp = async (path, dispatch) => {
       return { status: false, error };
     });
 };
-const postHttp = async (path, data, headers = {}) => {
+const postHttp = async (path, data, headers = {}, params = {}) => {
   const _axios = axios.create({
     baseURL: process.env.REACT_APP_KEY_URLAPI, //YOUR_API_URL HERE
     headers: {
