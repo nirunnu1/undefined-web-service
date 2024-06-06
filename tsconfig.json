@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    // "experimentalDecorators": true,
+    // "emitDecoratorMetadata": true,
+    "emitDeclarationOnly": true,
+    "lib": ["es6", "dom"],
+    "module": "commonjs",
+    "esModuleInterop": true,
+    // "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    // "target": "es2017",
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "types/",
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "paths": {
+      "*": ["node_modules/*", "src/types/*"]
+    },
+    "typeRoots": ["src/types", "node_modules/@types"]
+  },
+  "include": ["src/**/*"],
+  "exclude": []
+}

@@ -1,10 +1,11 @@
 import axios from "axios";
 import lodash from "lodash";
 import CheckInformation from "./check_information";
-import { getDocument, GlobalWorkerOptions, version } from "pdfjs-dist";
-import moment from './moment';
-GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.js`;
+// import { getDocument, GlobalWorkerOptions, version } from "pdfjs-dist";
+import moment from './Moment';
+// GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.js`;
 
+import UI from './UI';
 const getHttp = async (path, headers = {}, params = {}) => {
   const _axios = axios.create({
     baseURL: process.env.REACT_APP_KEY_URLAPI,
@@ -61,61 +62,61 @@ const postHttp = async (path, data, headers = {}, params = {}) => {
 };
 
 const KerryPayment = async (file, callback) => {
-  var pdf = await getDocument(await file.arrayBuffer()).promise;
-  const numPages = pdf.numPages;
-  var countPromises = []; // collecting all page promises
-  for (var j = 1; j <= numPages; j++) {
-    var page = pdf.getPage(j);
+  // var pdf = await getDocument(await file.arrayBuffer()).promise;
+  // const numPages = pdf.numPages;
+  // var countPromises = []; // collecting all page promises
+  // for (var j = 1; j <= numPages; j++) {
+  //   var page = pdf.getPage(j);
 
-    var txt = "";
-    countPromises.push(
-      page.then(function (page) {
-        // add page promise
-        var textContent = page.getTextContent();
-        return textContent;
-      })
-    );
-  }
-  Promise.all(countPromises).then(function (texts) {
-    const items = [];
-    texts.map((p) => {
-      let item = {};
-      p.items.map((e) => {
-        item[parseInt(e.transform[5])] = {
-          ...item[parseInt(e.transform[5])],
-          [parseInt(e.transform[4])]: e.str,
-        };
-      });
-      Object.keys(item).map((key) => {
-        if (Object.keys(item[key]).length > 10) {
-          // console.log(item[key]);
-          let ischeck = true;
+  //   var txt = "";
+  //   countPromises.push(
+  //     page.then(function (page) {
+  //       // add page promise
+  //       var textContent = page.getTextContent();
+  //       return textContent;
+  //     })
+  //   );
+  // }
+  // Promise.all(countPromises).then(function (texts) {
+  //   const items = [];
+  //   texts.map((p) => {
+  //     let item = {};
+  //     p.items.map((e) => {
+  //       item[parseInt(e.transform[5])] = {
+  //         ...item[parseInt(e.transform[5])],
+  //         [parseInt(e.transform[4])]: e.str,
+  //       };
+  //     });
+  //     Object.keys(item).map((key) => {
+  //       if (Object.keys(item[key]).length > 10) {
+  //         // console.log(item[key]);
+  //         let ischeck = true;
 
-          Object.keys(item[key]).map((c) => {
-            if (
-              item[key][c].toLowerCase().includes("con no") ||
-              item[key][c].toLowerCase().includes("total")
-            ) {
-              ischeck = false;
-            }
-          });
-          if (ischeck) {
-            let _item = {};
-            let i = 0;
-            Object.keys(item[key]).map((c) => {
-              if (!isNullOrEmpty(item[key][c].trim())) {
-                _item = { ..._item, [i]: item[key][c] };
-                i = i + 1;
-              }
-            });
-            items.push(_item);
-          }
-        }
-      });
-    });
-    //  console.log(item)
-    callback(items);
-  });
+  //         Object.keys(item[key]).map((c) => {
+  //           if (
+  //             item[key][c].toLowerCase().includes("con no") ||
+  //             item[key][c].toLowerCase().includes("total")
+  //           ) {
+  //             ischeck = false;
+  //           }
+  //         });
+  //         if (ischeck) {
+  //           let _item = {};
+  //           let i = 0;
+  //           Object.keys(item[key]).map((c) => {
+  //             if (!isNullOrEmpty(item[key][c].trim())) {
+  //               _item = { ..._item, [i]: item[key][c] };
+  //               i = i + 1;
+  //             }
+  //           });
+  //           items.push(_item);
+  //         }
+  //       }
+  //     });
+  //   });
+  //   //  console.log(item)
+  //   callback(items);
+  // });
 };
 const isNullOrEmpty = CheckInformation.isNullOrEmpty;
 const isEmail = CheckInformation.isEmail;
@@ -257,6 +258,7 @@ class Service {
   Kerry = {
     KerryPayment: KerryPayment,
   };
+  UI = UI
 }
 
 const service = new Service();
